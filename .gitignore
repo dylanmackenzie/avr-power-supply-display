@@ -1,0 +1,5 @@
+*.elf
+*.o
+*.hex
+*.asm
+test/bcd_test
