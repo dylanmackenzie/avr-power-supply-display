@@ -138,13 +138,13 @@ int main(void)
             digits[1] = 11; // 'p'
             digits[2] = 12; // 'o'
             digits[3] = 13; // 's'
-            PORTA |= _BV(ADC_LED_PIN);
+            PORTA &= ~_BV(ADC_LED_PIN); // sink current on LED pin
           } else {
             ADMUX |= ADC_MINUS_PIN & MUX_MASK;
             digits[1] = 14; // 'n'
             digits[2] = 15; // 'e'
             digits[3] = 16; // 'g'
-            PORTA &= ~_BV(ADC_LED_PIN);
+            PORTA |= _BV(ADC_LED_PIN); // source current on LED pin
           }
         }
 
