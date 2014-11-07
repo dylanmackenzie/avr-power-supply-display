@@ -19,7 +19,7 @@
 volatile uint8_t i = 0;
 
 Segment segments[4] = { 0b01111100, 0b01011100, 0b01011100, 0b01111000 };
-Digit digits[4] = {17, 12, 12, 18}; //'b', 'o', 'o', 't'
+Digit digits[4] = { 17, 12, 12, 18 }; //'b', 'o', 'o', 't'
 
 static inline void initTimer(void)
 {
