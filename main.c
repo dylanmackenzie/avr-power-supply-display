@@ -9,12 +9,33 @@
 #define BOOT_MSG_TIME 100
 #define DEBOUNCE_TIME 100
 
-#define ADC_PLUS_PIN 1
-#define ADC_MINUS_PIN 2
-#define ADC_SELECT_PIN 0
-#define ADC_LED_PIN 3
-#define DIGIT_CONTROL_MASK 0xf0 // pins responsible for selecting digits
-#define MUX_MASK 0x0f           // bits in ADMUX responsible for selecting input
+#define ADC_PORT PORTA
+#define ADC_DDR DDRA
+#define ADC_PIN PINA
+
+#define DIGIT_PORT PORTA
+#define DIGIT_DDR DDRA
+
+#define SEG_PORT PORTB
+#define SEG_DDR DDRB
+
+#define ADC_PLUS_PIN PA1
+#define ADC_MINUS_PIN PA2
+#define ADC_SELECT_PIN PA0
+#define ADC_LED_PIN PA3
+
+// bits for ADMUX that select the plus or minus pins
+#define ADC_PLUS_MUX 0b0001
+#define ADC_MINUS_MUX 0b0010
+
+// pins responsible for selecting digits
+#define D0 PA7
+#define D1 PA6
+#define D2 PA5
+#define D3 PA4
+
+// bits in ADMUX responsible for selecting input
+#define MUX_MASK 0x0f
 
 volatile uint8_t i = 0;
 
@@ -23,26 +44,27 @@ Digit digits[4] = { 17, 12, 12, 18 }; //'b', 'o', 'o', 't'
 
 static inline void initTimer(void)
 {
-  TCCR0A |= _BV(CTC0);
-  TCCR0B |= _BV(CS01) | _BV(CS00);
-  TIMSK |= _BV(OCIE0A);
+  TCCR0A = _BV(CTC0);
+  TCCR0B = _BV(CS01) | _BV(CS00);
+  TIMSK = _BV(OCIE0A);
   OCR0A = 35;
 }
 
 static inline void initADC(void)
 {
-  ADMUX |= ADC_PLUS_PIN & MUX_MASK;
-  DIDR0 |= _BV(ADC_PLUS_PIN) | _BV(ADC_MINUS_PIN);
+  ADMUX = ADC_PLUS_MUX;
+  DIDR0 = _BV(ADC_PLUS_PIN) | _BV(ADC_MINUS_PIN);
   /*ADCSRB = 0x00;*/
-  ADCSRA |= _BV(ADEN) | _BV(ADSC) | _BV(ADPS2) | _BV(ADPS1);
+  ADCSRA = _BV(ADEN) | _BV(ADSC) | _BV(ADPS2) | _BV(ADPS1);
 }
 
 static inline void initIO(void)
 {
   // low: inputs, high: outputs
-  DDRA = DIGIT_CONTROL_MASK | _BV(ADC_LED_PIN);
-  DDRB = 0xff;
-  PORTA |= _BV(ADC_SELECT_PIN); // enable pull-up resistor on select pin
+  DIGIT_DDR = _BV(D0) | _BV(D1) | _BV(D2) | _BV(D3);
+  ADC_DDR |= _BV(ADC_LED_PIN);
+  SEG_DDR = 0xff;
+  ADC_PORT = _BV(ADC_SELECT_PIN); // enable pull-up resistor on select pin
 }
 
 ISR(TIMER0_COMPA_vect)
@@ -50,13 +72,13 @@ ISR(TIMER0_COMPA_vect)
   i = (i + 1) & 0x3; // increment i and reset to 0 if i is greater than 3
 
   // output digit
-  PORTA &= ~DIGIT_CONTROL_MASK;
-  PORTB = ~(segments[i]);
+  DIGIT_PORT &= ~(_BV(D0) | _BV(D1) | _BV(D2) | _BV(D3));
+  SEG_PORT = ~(segments[i]);
   switch(i) {
-    case 0: PORTA |= _BV(7); break;
-    case 1: PORTA |= _BV(6); break;
-    case 2: PORTA |= _BV(5); break;
-    case 3: PORTA |= _BV(4); break;
+    case 0: DIGIT_PORT |= _BV(D0); break;
+    case 1: DIGIT_PORT |= _BV(D1); break;
+    case 2: DIGIT_PORT |= _BV(D2); break;
+    case 3: DIGIT_PORT |= _BV(D3); break;
   }
 }
 
@@ -82,7 +104,7 @@ int main(void)
   for (;;) {
 
     // reading of the adc button differs from button state
-    if ((PINA & _BV(ADC_SELECT_PIN)) ^ adc_btn_state) {
+    if ((ADC_PIN & _BV(ADC_SELECT_PIN)) ^ adc_btn_state) {
 
       // reading has been consistent so we have a state change
       if (--dbnc_timer == 0) {
@@ -131,20 +153,20 @@ int main(void)
           msg_timer = CHANGE_RAIL_MSG_TIME; // display message
           dp = 0x00;
           digits[0] = 10; // \0
-          ADMUX &= ~MUX_MASK;
+          ADMUX &= ~(MUX_MASK);
 
           if (adc_pin) {
-            ADMUX |= ADC_PLUS_PIN & MUX_MASK;
+            ADMUX |= ADC_PLUS_MUX;
             digits[1] = 11; // 'p'
             digits[2] = 12; // 'o'
             digits[3] = 13; // 's'
-            PORTA &= ~_BV(ADC_LED_PIN); // sink current on LED pin
+            ADC_PORT &= ~_BV(ADC_LED_PIN); // sink current on LED pin
           } else {
-            ADMUX |= ADC_MINUS_PIN & MUX_MASK;
+            ADMUX |= ADC_MINUS_MUX;
             digits[1] = 14; // 'n'
             digits[2] = 15; // 'e'
             digits[3] = 16; // 'g'
-            PORTA |= _BV(ADC_LED_PIN); // source current on LED pin
+            ADC_PORT |= _BV(ADC_LED_PIN); // source current on LED pin
           }
         }
 
