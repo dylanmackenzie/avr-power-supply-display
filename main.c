@@ -19,14 +19,14 @@
 #define SEG_PORT PORTB
 #define SEG_DDR DDRB
 
-#define ADC_PLUS_PIN PA1
-#define ADC_MINUS_PIN PA2
-#define ADC_SELECT_PIN PA0
+#define ADC_PLUS_PIN PA0
+#define ADC_MINUS_PIN PA1
+#define ADC_SELECT_PIN PA2
 #define ADC_LED_PIN PA3
 
 // bits for ADMUX that select the plus or minus pins
-#define ADC_PLUS_MUX 0b0001
-#define ADC_MINUS_MUX 0b0010
+#define ADC_PLUS_MUX 0b0000
+#define ADC_MINUS_MUX 0b0001
 
 // pins responsible for selecting digits
 #define D0 PA7
