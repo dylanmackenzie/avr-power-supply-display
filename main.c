@@ -25,8 +25,8 @@
 #define ADC_LED_PIN PA3
 
 // bits for ADMUX that select the plus or minus pins
-#define ADC_PLUS_MUX 0b0000
-#define ADC_MINUS_MUX 0b0001
+#define ADC_PLUS_MUX 0b00000
+#define ADC_MINUS_MUX 0b00001
 
 // pins responsible for selecting digits
 #define D0 PA7
@@ -35,7 +35,7 @@
 #define D3 PA4
 
 // bits in ADMUX responsible for selecting input
-#define MUX_MASK 0x0f
+#define MUX_MASK 0x1f
 
 volatile uint8_t i = 0;
 
@@ -52,9 +52,9 @@ static inline void initTimer(void)
 
 static inline void initADC(void)
 {
-  ADMUX = ADC_PLUS_MUX;
+  ADMUX = _BV(REFS1) | ADC_PLUS_MUX;
   DIDR0 = _BV(ADC_PLUS_PIN) | _BV(ADC_MINUS_PIN);
-  /*ADCSRB = 0x00;*/
+  ADCSRB = _BV(REFS2);
   ADCSRA = _BV(ADEN) | _BV(ADSC) | _BV(ADPS2) | _BV(ADPS1);
 }
 
