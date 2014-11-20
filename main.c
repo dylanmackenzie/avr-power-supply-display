@@ -135,9 +135,13 @@ int main(void)
         old_acc = acc + old_acc - (old_acc - 8/2) / 8;
         acc = old_acc / 8;
 
-        // multiply by 12/32 to scale 2^12 to 1500 without overflowing a uint16_t
+        // multiply by 12/32 to scale 2^12 to 1534 without overflowing a uint16_t
         acc *= 12;
         acc >>= 5;
+
+        // invert reading if it comes from the negative pin
+        if (!adc_pin_state)
+          acc = 1534 - acc;
 
         // if we are not displaying a message
         if (msg_timer == 0) {
